@@ -1,23 +1,52 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36811.4 d17.14
-MinimumVisualStudioVersion = 10.0.40219.1
-Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "SalihYördemRastgeleSayıÜreteci", "SalihYördemRastgeleSayıÜreteci\SalihYördemRastgeleSayıÜreteci.pyproj", "{8A28B3FB-1DC8-403F-9992-B3AA5E35E82E}"
-EndProject
-Global
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{8A28B3FB-1DC8-403F-9992-B3AA5E35E82E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8A28B3FB-1DC8-403F-9992-B3AA5E35E82E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {858E7C1D-94C7-4560-A225-8356AF0A88A7}
-	EndGlobalSection
-EndGlobal
+import time
+
+class CollatzRNG:
+    def __init__(self, seed=None):
+        """
+        RNG'yi başlatır. Eğer seed verilmezse o anki zamanı kullanır.
+        """
+        if seed is None:
+            self.state = int(time.time() * 1000)
+        else:
+            self.state = seed
+        
+        # Başlangıçtaki state 0 veya negatif olmamalıdır
+        if self.state <= 0:
+            self.state = 123456  # Varsayılan güvenli bir başlangıç
+
+    def _collatz_step(self):
+        """
+        Bir sonraki Collatz adımını hesaplar ve durumu günceller.
+        Kural: Çift ise n/2, Tek ise 3n+1
+        """
+        if self.state % 2 == 0:
+            self.state = self.state // 2
+        else:
+            self.state = 3 * self.state + 1
+
+    def next_int(self, min_val, max_val):
+        """
+        Belirtilen aralıkta rastgele bir tam sayı döndürür.
+        """
+        # Entropiyi artırmak için birkaç adım atlatıyoruz (Isınma turları)
+        for _ in range(5):
+            self._collatz_step()
+            
+            # Eğer Collatz döngüsü (4-2-1) 1'e ulaşırsa,
+            # akışı bozmak için durumu (state) değiştiriyoruz.
+            if self.state == 1:
+                self.state = int(time.time() * 1000) + 7  # Tuzlama (Salting)
+
+        # Sonuç hesaplama: Modülo işlemi ile aralığa sığdır
+        return min_val + (self.state % (max_val - min_val + 1))
+
+# --- Kullanım Örneği ---
+if __name__ == "__main__":
+    rng = CollatzRNG()  # Seed otomatik atanır
+    
+    print("Collatz Tabanlı Rastgele Sayı Üreteci Testi:")
+    print("-" * 40)
+    
+    for i in range(10):
+        sayi = rng.next_int(1, 100)
+        print(f"{i+1}. Rastgele Sayı: {sayi}")
